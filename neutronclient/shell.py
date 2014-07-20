@@ -60,6 +60,7 @@ from neutronclient.neutron.v2_0.vpn import ikepolicy
 from neutronclient.neutron.v2_0.vpn import ipsec_site_connection
 from neutronclient.neutron.v2_0.vpn import ipsecpolicy
 from neutronclient.neutron.v2_0.vpn import vpnservice
+from neutronclient.neutron.v2_0.lbssl import lbssl
 from neutronclient.openstack.common.gettextutils import _
 from neutronclient.openstack.common import strutils
 from neutronclient.version import __version__
@@ -266,18 +267,39 @@ COMMAND_V2 = {
     'nuage-netpartition-show': netpartition.ShowNetPartition,
     'nuage-netpartition-create': netpartition.CreateNetPartition,
     'nuage-netpartition-delete': netpartition.DeleteNetPartition,
+    'lb-sslcert-create': lbssl.CreateLbSSLCert,
+    'lb-sslcert-list': lbssl.ListLbSSLCert,
+    'lb-sslcert-show': lbssl.ShowLbSSLCert,
+    'lb-sslcert-delete': lbssl.DeleteLbSSLCert,
+    'lb-sslcert-update': lbssl.UpdateLbSSLCert,
+    'lb-vip-sslcert-associate': lbssl.AssociateVipSSLCert,
+    'lb-vip-sslcert-disassociate': lbssl.DisassociateVipSSLCert,
+    'lb-vip-sslcert-association-list': lbssl.ListVipSSLCertAssociations,
+    'lb-vip-sslcert-association-show': lbssl.ShowVipSSLCertAssociation,
+    'lb-sslcertchain-create': lbssl.CreateLbSSLCertChain,
+    'lb-sslcertchain-list': lbssl.ListLbSSLCertChain,
+    'lb-sslcertchain-show': lbssl.ShowLbSSLCertChain,
+    'lb-sslcertchain-delete': lbssl.DeleteLbSSLCertChain,
+    'lb-sslcertchain-update': lbssl.UpdateLbSSLCertChain,
+    'lb-sslcertkey-create': lbssl.CreateLbSSLCertKey,
+    'lb-sslcertkey-list': lbssl.ListLbSSLCertKey,
+    'lb-sslcertkey-show': lbssl.ShowLbSSLCertKey,
+    'lb-sslcertkey-delete': lbssl.DeleteLbSSLCertKey,
+    'lb-sslcertkey-update': lbssl.UpdateLbSSLCertKey,
 }
 
 COMMANDS = {'2.0': COMMAND_V2}
 
 
 class HelpAction(argparse.Action):
+
     """Provide a custom action so the -h and --help options
     to the main app will print a list of the commands.
 
     The commands are determined by checking the CommandManager
     instance, passed in as the "default" value for the action.
     """
+
     def __call__(self, parser, namespace, values, option_string=None):
         outputs = []
         max_len = 0
@@ -362,8 +384,8 @@ class NeutronShell(app.App):
             '--os-auth-strategy', metavar='<auth-strategy>',
             default=env('OS_AUTH_STRATEGY', default='keystone'),
             help=_('Authentication strategy (Env: OS_AUTH_STRATEGY'
-            ', default keystone). For now, any other value will'
-            ' disable the authentication'))
+                   ', default keystone). For now, any other value will'
+                   ' disable the authentication'))
         parser.add_argument(
             '--os_auth_strategy',
             help=argparse.SUPPRESS)
@@ -585,7 +607,7 @@ class NeutronShell(app.App):
                           " either --os-password or env[OS_PASSWORD]"))
 
                 if (not self.options.os_tenant_name
-                    and not self.options.os_tenant_id):
+                        and not self.options.os_tenant_id):
                     raise exc.CommandError(
                         _("You must provide a tenant_name or tenant_id via"
                           "  --os-tenant-name, env[OS_TENANT_NAME]"

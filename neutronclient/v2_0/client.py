@@ -94,9 +94,11 @@ def exception_handler_v20(status_code, error_content):
 
 
 class APIParamsCall(object):
+
     """A Decorator to add support for format and tenant overriding
        and filters
     """
+
     def __init__(self, function):
         self.function = function
 
@@ -112,6 +114,7 @@ class APIParamsCall(object):
 
 
 class Client(object):
+
     """Client for the OpenStack Neutron v2.0 API.
 
     :param string username: Username for authentication. (optional)
@@ -220,6 +223,14 @@ class Client(object):
     firewall_path = "/fw/firewalls/%s"
     net_partitions_path = "/net-partitions"
     net_partition_path = "/net-partitions/%s"
+    ssl_certs_path = "/lb/ssl_certificates"
+    ssl_cert_path = "/lb/ssl_certificates/%s"
+    vip_ssl_cert_associations_path = "/lb/vip_ssl_certificate_associations"
+    vip_ssl_cert_association_path = "/lb/vip_ssl_certificate_associations/%s"
+    ssl_cert_chains_path = "/lb/ssl_certificate_chains"
+    ssl_cert_chain_path = "/lb/ssl_certificate_chains/%s"
+    ssl_cert_keys_path = "/lb/ssl_certificate_keys"
+    ssl_cert_key_path = "/lb/ssl_certificate_keys/%s"
 
     # API has no way to report plurals, so we have to hard code them
     EXTED_PLURALS = {'routers': 'router',
@@ -1131,6 +1142,108 @@ class Client(object):
         """Delete the network partition."""
         return self.delete(self.net_partition_path % netpartition)
 
+    @APIParamsCall
+    def create_ssl_certificate(self, body=None):
+        """Creates a new ssl certificate."""
+        return self.post(self.ssl_certs_path, body=body)
+
+    @APIParamsCall
+    def list_ssl_certificates(self, retrieve_all=True, **_params):
+        """Fetches a list of all ssl certs of a tenant."""
+        # Pass filters in "params" argument to do_request
+        return self.list('ssl_certificates', self.ssl_certs_path, retrieve_all,
+                         **_params)
+
+    @APIParamsCall
+    def delete_ssl_certificate(self, cert):
+        """Deletes the specified cert."""
+        return self.delete(self.ssl_cert_path % (cert))
+
+    @APIParamsCall
+    def show_ssl_certificate(self, cert, **_params):
+        """Fetches information of a specified cert."""
+        return self.get(self.ssl_cert_path % (cert), params=_params)
+
+    @APIParamsCall
+    def create_vip_ssl_certificate_association(self, body=None):
+        """ Creates a new association between ssl cert and vip """
+        return self.post(self.vip_ssl_cert_associations_path, body=body)
+
+    @APIParamsCall
+    def delete_vip_ssl_certificate_association(self, assoc_id):
+        """Deletes the specified cert."""
+        return self.delete(self.vip_ssl_cert_association_path % (assoc_id))
+
+    @APIParamsCall
+    def list_vip_ssl_certificate_associations(
+            self, retrieve_all=True, **_params):
+        """Fetches a list of all vip ssl cert associations of a tenant."""
+        # Pass filters in "params" argument to do_request
+        return self.list('vip_ssl_certificate_associations',
+                         self.vip_ssl_cert_associations_path, retrieve_all,
+                         **_params)
+
+    @APIParamsCall
+    def show_vip_ssl_certificate_association(self, assoc_id, **_params):
+        """Fetches information of a specified vip ssl cert association."""
+        return self.get(self.vip_ssl_cert_association_path %
+                        (assoc_id), params=_params)
+
+    @APIParamsCall
+    def create_ssl_certificate_chain(self, body=None):
+        """Creates a new ssl certificate chain."""
+        return self.post(self.ssl_cert_chains_path, body=body)
+
+    @APIParamsCall
+    def list_ssl_certificate_chains(self, retrieve_all=True, **_params):
+        """Fetches a list of all ssl cert chains of a tenant."""
+        # Pass filters in "params" argument to do_request
+        return self.list('ssl_certificate_chains', self.ssl_cert_chains_path, retrieve_all,
+                         **_params)
+
+    @APIParamsCall
+    def delete_ssl_certificate_chain(self, cert_chain):
+        """Deletes the specified cert chain."""
+        return self.delete(self.ssl_cert_chain_path % (cert_chain))
+
+    @APIParamsCall
+    def show_ssl_certificate_chain(self, cert_chain, **_params):
+        """Fetches information of a specified cert chain."""
+        return self.get(self.ssl_cert_chain_path %
+                        (cert_chain), params=_params)
+
+    @APIParamsCall
+    def update_ssl_certificate_chain(self, cert_chain, body=None):
+        """Update an ssl cert chain."""
+        return self.put(self.ssl_cert_chain_path % cert_chain, body=body)
+
+    @APIParamsCall
+    def create_ssl_certificate_key(self, body=None):
+        """Creates a new ssl certificate key."""
+        return self.post(self.ssl_cert_keys_path, body=body)
+
+    @APIParamsCall
+    def list_ssl_certificate_keys(self, retrieve_all=True, **_params):
+        """Fetches a list of all ssl cert keys of a tenant."""
+        # Pass filters in "params" argument to do_request
+        return self.list('ssl_certificate_keys', self.ssl_cert_keys_path, retrieve_all,
+                         **_params)
+
+    @APIParamsCall
+    def delete_ssl_certificate_key(self, cert_key):
+        """Deletes the specified cert key."""
+        return self.delete(self.ssl_cert_key_path % (cert_key))
+
+    @APIParamsCall
+    def show_ssl_certificate_key(self, cert_key, **_params):
+        """Fetches information of a specified cert key."""
+        return self.get(self.ssl_cert_key_path % (cert_key), params=_params)
+
+    @APIParamsCall
+    def update_ssl_certificate_key(self, cert_key, body=None):
+        """Update an ssl cert key."""
+        return self.put(self.ssl_cert_key_path % cert_key, body=body)
+
     def __init__(self, **kwargs):
         """Initialize a new client for the Neutron v2.0 API."""
         super(Client, self).__init__()
@@ -1164,7 +1277,7 @@ class Client(object):
         # Add format and tenant_id
         action += ".%s" % self.format
         action = self.action_prefix + action
-        if type(params) is dict and params:
+        if isinstance(params, dict) and params:
             params = utils.safe_encode_dict(params)
             action += '?' + urllib.urlencode(params, doseq=1)
         # Ensure client always has correct uri - do not guesstimate anything
@@ -1206,7 +1319,7 @@ class Client(object):
         """
         if data is None:
             return None
-        elif type(data) is dict:
+        elif isinstance(data, dict):
             return serializer.Serializer(
                 self.get_attr_metadata()).serialize(data, self.content_type())
         else:

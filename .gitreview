@@ -1,4 +1,5 @@
 [gerrit]
-host=review.openstack.org
+host=openstratus-gerrit-3993.phx-os1.stratus.dev.ebay.com
 port=29418
-project=openstack/python-neutronclient.git
+project=C3/python-neutronclient.git
+defaultbranch=master
