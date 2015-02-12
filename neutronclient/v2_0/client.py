@@ -231,6 +231,8 @@ class Client(object):
     ssl_cert_chain_path = "/lb/ssl_certificate_chains/%s"
     ssl_cert_keys_path = "/lb/ssl_certificate_keys"
     ssl_cert_key_path = "/lb/ssl_certificate_keys/%s"
+    ssl_profiles_path = "/lb/ssl_profiles"
+    ssl_profile_path = "/lb/ssl_profiles/%s"
 
     # API has no way to report plurals, so we have to hard code them
     EXTED_PLURALS = {'routers': 'router',
@@ -1141,6 +1143,30 @@ class Client(object):
     def delete_net_partition(self, netpartition):
         """Delete the network partition."""
         return self.delete(self.net_partition_path % netpartition)
+
+    ############
+    @APIParamsCall
+    def create_ssl_profile(self, body=None):
+        """Creates a new ssl profile."""
+        return self.post(self.ssl_profiles_path, body=body)
+
+    @APIParamsCall
+    def list_ssl_profiles(self, retrieve_all=True, **_params):
+        """Fetches a list of all ssl profiles of a tenant."""
+        # Pass filters in "params" argument to do_request
+        return self.list('ssl_profiles', self.ssl_profiles_path, retrieve_all,
+                         **_params)
+
+    @APIParamsCall
+    def delete_ssl_profile(self, ssl_profile):
+        """Deletes the specified SSL profile."""
+        return self.delete(self.ssl_profile_path % (ssl_profile))
+
+    @APIParamsCall
+    def show_ssl_profile(self, ssl_profile, **_params):
+        """Fetches information of a specified cert."""
+        return self.get(self.ssl_profile_path % (ssl_profile), params=_params)
+    ############
 
     @APIParamsCall
     def create_ssl_certificate(self, body=None):

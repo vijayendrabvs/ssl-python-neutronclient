@@ -30,11 +30,6 @@ from neutronclient.openstack.common.gettextutils import _
     'lb-sslcert-delete': lbssl.DeleteLbSSLCert,
     'lb-sslcert-update': lbssl.UpdateLbSSLCert,
 
-    'lb-vip-sslcert-associate': AssociateVipSSLCert,
-    'lb-vip-sslcert-disassociate': lbssl.DisassociateVipSSLCert,
-    'lb-vip-sslcert-association-list': lbssl.ListVipSSLCertAssociations,
-    'lb-vip-sslcert-association-show': lbssl.ShowVipSSLCertAssociation,
-
     'lb-sslcertchain-create': lbssl.CreateLbSSLCertChain,
     'lb-sslcertchain-list': lbssl.ListLbSSLCertChain,
     'lb-sslcertchain-show': lbssl.ShowLbSSLCertChain,
@@ -46,9 +41,158 @@ from neutronclient.openstack.common.gettextutils import _
     'lb-sslcertkey-show': lbssl.ShowLbSSLCertKey,
     'lb-sslcertkey-delete': lbssl.DeleteLbSSLCertKey,
     'lb-sslcertkey-update': lbssl.UpdateLbSSLCertKey
+
+    'lb-sslprofile-create': lbssl.CreateLbSSLProfile,
+    'lb-sslprofile-list': lbssl.ListLbSSLProfile,
+    'lb-sslprofile-show': lbssl.ShowLbSSLProfile,
+    'lb-sslprofile-delete': lbssl.DeleteLbSSLProfile,
+    'lb-sslprofile-update': lbssl.UpdateLbSSLProfile,
+
+    'lb-vip-sslcert-associate': AssociateVipSSLCert,
+    'lb-vip-sslcert-disassociate': lbssl.DisassociateVipSSLCert,
+    'lb-vip-sslcert-association-list': lbssl.ListVipSSLCertAssociations,
+    'lb-vip-sslcert-association-show': lbssl.ShowVipSSLCertAssociation,
 """
 
+class CreateLbSSLProfile(neutronV20.CreateCommand):
 
+    """ Creates an association between a vip and an SSL certificate"""
+
+    resource = 'ssl_profile'
+    log = logging.getLogger(__name__ + '.CreateLbSSLProfile')
+
+    def add_known_arguments(self, parser):
+        parser.add_argument(
+            '--name',
+            required=True,
+            help=_('Name of the SSL profile'))
+        parser.add_argument(
+            '--description',
+            required=False,
+            help=_('Description of the SSL profile'))
+        parser.add_argument(
+            '--cert-id',
+            dest="cert_id",
+            required=True,
+            help=_('UUID of SSL certificate'))
+        parser.add_argument(
+            '--key-id',
+            dest="key_id",
+            required=True,
+            help=_('UUID of SSL private key'))
+        parser.add_argument(
+            '--cert-chain-id',
+            dest="cert_chain_id",
+            required=False,
+            help=_('UUID of SSL Cert chain id'))
+        parser.add_argument(
+            '--shared',
+            action='store_true',
+            help=_('Specifying --shared makes the ssl profile visible to all tenants'),
+            default=argparse.SUPPRESS)
+
+    def args2body(self, parsed_args):
+        if not parsed_args.cert_chain_id:
+            cert_chain_id = ''
+        else:
+            cert_chain_id = parsed_args.cert_chain_id
+
+        if not parsed_args.description:
+            description = ''
+        else:
+            description = parsed_args.description
+        body = {'ssl_profile': {
+            'name': parsed_args.name,
+            'description': description,
+            'cert_id': parsed_args.cert_id,
+            'cert_chain_id': cert_chain_id,
+            'key_id': parsed_args.key_id}
+        }
+        neutronV20.update_dict(parsed_args, body['ssl_profile'],
+                               ['tenant_id', 'shared'])
+        return body
+
+
+class ListLbSSLProfile(neutronV20.ListCommand):
+
+    """List all SSL profiles for v1 lbaas api."""
+
+    resource = 'ssl_profile'
+    log = logging.getLogger(__name__ + '.ListLbSSLProfile')
+    list_columns = ['id', 'tenant_id', 'name', 'description', 'cert_id', 'cert_chain_id', 'key_id']
+    pagination_support = True
+    sorting_support = True
+
+    def add_known_arguments(self, parser):
+        pass
+
+    def args2body(self, parsed_args):
+        body = {'ssl_profile': {
+            'name': parsed_args.name,
+            'description': parsed_args.description,
+            'cert_id': parsed_args.cert_id,
+            'cert_chain_id': parsed_args.cert_chain_id,
+            'key_id': parsed_args.key_id}}
+        neutronV20.update_dict(parsed_args, body['ssl_profile'],
+                               ['tenant_id'])
+        return body
+
+
+class DeleteLbSSLProfile(neutronV20.DeleteCommand):
+
+    """Delete an SSL certificate key in v1 lbaas api."""
+
+    resource = 'ssl_profile'
+    log = logging.getLogger(__name__ + '.DeleteLbSSLProfile')
+
+    def args2body(self, parsed_args):
+        body = {'ssl_profile': {
+            'id': parsed_args.id}}
+        neutronV20.update_dict(parsed_args, body['ssl_profile'],
+                               ['tenant_id'])
+        return body
+
+
+class ShowLbSSLProfile(neutronV20.ShowCommand):
+
+    """Show an ssl certificate key in v1 lbaas api."""
+    resource = 'ssl_profile'
+    log = logging.getLogger(__name__ + '.ShowLbSSLProfile')
+
+    def args2body(self, parsed_args):
+        body = {'ssl_profile': {
+            'name': parsed_args.name,
+            'description': parsed_args.description,
+            'cert_id': parsed_args.cert_id,
+            'cert_chain_id': parsed_args.cert_chain_id,
+            'key_id': parsed_args.key_id}}
+        neutronV20.update_dict(parsed_args, body['ssl_profile'],
+                               ['tenant_id'])
+        return body
+
+
+class UpdateLbSSLProfile(neutronV20.UpdateCommand):
+
+    """Update an SSL certificate key for v1 LBaaS ssl."""
+
+    resource = 'ssl_profile'
+    log = logging.getLogger(__name__ + '.UpdateLbSSLProfile')
+
+    def add_known_arguments(self, parser):
+        parser.add_argument(
+            '--description',
+            required=False,
+            help=_('Description of the SSL profile'))
+
+    def args2body(self, parsed_args):
+        body = {'ssl_profile': {
+            'name': parsed_args.name,
+            'key': parsed_args.key}}
+        neutronV20.update_dict(parsed_args, body['ssl_certificate_key'],
+                               ['tenant_id'])
+        return body
+
+################
 class CreateLbSSLCertKey(neutronV20.CreateCommand):
 
     """Create an SSL certificate key for v1 LBaaS ssl."""
@@ -269,7 +413,7 @@ class AssociateVipSSLCert(neutronV20.CreateCommand):
     def add_known_arguments(self, parser):
         parser.add_argument(
             '--name',
-            required=False,
+            required=True,
             help=_('Name of the VIP SSL certificate association'))
         parser.add_argument(
             '--vip-id',
@@ -277,33 +421,16 @@ class AssociateVipSSLCert(neutronV20.CreateCommand):
             required=True,
             help=_('Id of the VIP'))
         parser.add_argument(
-            '--cert-id',
-            dest="cert_id",
+            '--ssl-profile-id',
+            dest="ssl_profile_id",
             required=True,
-            help=_('Id of the SSL certificate'))
-        parser.add_argument(
-            '--key-id',
-            dest="key_id",
-            required=True,
-            help=_('private key\'s key id'))
-        parser.add_argument(
-            '--cert-chain-id',
-            dest="cert_chain_id",
-            required=False,
-            help=_('Cert chain id'))
+            help=_('Id of the SSL profile'))
 
     def args2body(self, parsed_args):
-        if not parsed_args.cert_chain_id:
-            cert_chain_id = ''
-        else:
-            cert_chain_id = parsed_args.cert_chain_id
-
         body = {'vip_ssl_certificate_association': {
             'name': parsed_args.name,
             'vip_id': parsed_args.vip_id,
-            'cert_id': parsed_args.cert_id,
-            'cert_chain_id': cert_chain_id,
-            'key_id': parsed_args.key_id}
+            'ssl_profile_id': parsed_args.ssl_profile_id}
         }
         neutronV20.update_dict(parsed_args, body['vip_ssl_certificate_association'],
                                ['tenant_id'])
@@ -460,9 +587,7 @@ class ListVipSSLCertAssociations(neutronV20.ListCommand):
         'id',
         'name',
         'vip_id',
-        'cert_id',
-        'key_id',
-        'cert_chain_id',
+        'ssl_profile_id',
         'status',
         'status_description']
     pagination_support = True
@@ -490,8 +615,6 @@ class ShowVipSSLCertAssociation(neutronV20.ShowCommand):
     log = logging.getLogger(__name__ + '.ShowVipSSLCertAssociation')
 
     def args2body(self, parsed_args):
-        import pdb
-        pdb.set_trace()
         body = {'vip_ssl_certificate_association': {
             'id': parsed_args.id}}
         neutronV20.update_dict(parsed_args, body['vip_ssl_certificate_association'],

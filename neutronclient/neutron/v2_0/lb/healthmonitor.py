@@ -19,6 +19,7 @@
 from __future__ import print_function
 
 import logging
+import argparse
 
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.openstack.common.gettextutils import _
@@ -29,7 +30,7 @@ class ListHealthMonitor(neutronV20.ListCommand):
 
     resource = 'health_monitor'
     log = logging.getLogger(__name__ + '.ListHealthMonitor')
-    list_columns = ['id', 'type', 'admin_state_up']
+    list_columns = ['id', 'name', 'type', 'admin_state_up']
     pagination_support = True
     sorting_support = True
 
@@ -85,11 +86,30 @@ class CreateHealthMonitor(neutronV20.CreateCommand):
                    'connection to be established before it times out. The '
                    'value must be less than the delay value.'))
         parser.add_argument(
+            '--shared',
+            action='store_true',
+            help=_('Specifying --shared makes healthmonitor visible to all tenants'),
+            default=argparse.SUPPRESS)
+        parser.add_argument(
+            '--name',
+            dest='name',
+            required=False,
+            help=_('Name of the health monitor'))
+        parser.add_argument(
+            '--response-string',
+            dest='response_string',
+            required=False,
+            help=_('Response string for advanced health monitoring'))
+        parser.add_argument(
             '--type',
             required=True, choices=['PING', 'TCP', 'HTTP', 'HTTPS'],
             help=_('One of predefined health monitor types'))
 
     def args2body(self, parsed_args):
+        if not parsed_args.response_string:
+            parsed_args.response_string = ''
+        if not parsed_args.name:
+            parsed_args.name = ''
         body = {
             self.resource: {
                 'admin_state_up': parsed_args.admin_state,
@@ -97,10 +117,12 @@ class CreateHealthMonitor(neutronV20.CreateCommand):
                 'max_retries': parsed_args.max_retries,
                 'timeout': parsed_args.timeout,
                 'type': parsed_args.type,
+                'name': parsed_args.name,
+                'response_string': parsed_args.response_string,
             },
         }
         neutronV20.update_dict(parsed_args, body[self.resource],
-                               ['expected_codes', 'http_method', 'url_path',
+                               ['expected_codes', 'http_method', 'url_path', 'shared',
                                 'tenant_id'])
         return body
 

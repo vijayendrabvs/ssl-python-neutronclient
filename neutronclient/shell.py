@@ -286,6 +286,11 @@ COMMAND_V2 = {
     'lb-sslcertkey-show': lbssl.ShowLbSSLCertKey,
     'lb-sslcertkey-delete': lbssl.DeleteLbSSLCertKey,
     'lb-sslcertkey-update': lbssl.UpdateLbSSLCertKey,
+    'lb-sslprofile-create': lbssl.CreateLbSSLProfile,
+    'lb-sslprofile-delete': lbssl.DeleteLbSSLProfile,
+    'lb-sslprofile-update': lbssl.UpdateLbSSLProfile,
+    'lb-sslprofile-show': lbssl.ShowLbSSLProfile,
+    'lb-sslprofile-list': lbssl.ListLbSSLProfile,
 }
 
 COMMANDS = {'2.0': COMMAND_V2}
